@@ -45,12 +45,12 @@ import (
   "syscall"
 )
 
-//Grouping together three related variables in a single package-level variable, protect.
+// Grouping together three related variables in a single package-level variable, protect.
 var shr = struct {  //Unnamed struct.
-  mutexDirs sync.Mutex  //Protect the file.
+  mutexDirs sync.Mutex //Protect the file.
 }{}
 
-//Is the current user running as root?
+// Is the current user running as root?
 func IsRoot() (bool, error) {
   current, err := user.Current()
   if err != nil {
@@ -71,20 +71,23 @@ func GetOS() string {
   return runtime.GOOS
 }
 
-/***
+/*
+**
 Go's runtime determines how many kernel-level threads to use based on the number of logical
 processors. This is set in the environment variable called GOMAXPROCS. If this variable is not set,
 Go populates this variable by quering the OS to determine how many CPUs the system has.
-***/
+**
+*/
 func CpusAvailable() (numOfCpus, maxProcs int) {
   //Go defaults the value of GOMAXPROCS to the value of NumCPU().
-  numOfCpus = runtime.NumCPU()  //Number of CPUs.
+  numOfCpus = runtime.NumCPU() //Number of CPUs.
   //Calling GOMAXPROCS(n) with n < 1 returns the current value without altering it.
   maxProcs = runtime.GOMAXPROCS(0)
   return
 }
 
-/***
+/*
+**
 When you create a new file or directory, it is assigned default permissions. There are two things
 that affect the default permissions. The first is whether you are creating a regular file or a
 directory; the second is the current umask.
@@ -106,11 +109,16 @@ Effects of Permissions on Files and Directories
 Permission  Effect on files                     Effective on directories
 ---------------------------------------------------------------------------------------------------
 r (read)    File contents can be read.          Contents of the directory (the file names) can be
-                                                listed. Octal value of 4.
+
+  listed. Octal value of 4.
+
 w (write)   File contents can be changed.       Any file in the directory can be created, deleted,
-                                                or renamed. Octal value of 2.
+
+  or renamed. Octal value of 2.
+
 x (execute) Files can be executed as commands.  The directory can become the current working
-                                                directory. Octal value of 1.
+
+  directory. Octal value of 1.
 
 The umask command without arguments will display the current value of the shell's umask:
 $ umask
@@ -128,7 +136,8 @@ $ ls -l file_name.txt
 
 And to get the permissions for a directory:
 $ ls -ld directory_name
-***/
+**
+*/
 func CreateDirs(umask int, perm os.FileMode, dirs ...string) (string, error) {
   sb := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
@@ -165,7 +174,7 @@ func ReadAllShareLock1(filePath string, flag int, perm os.FileMode) ([]byte, err
   //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
   //are executed in last-in-first-out order.
   defer file.Close()
-  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil {  //Share reads.
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil { //Share reads.
     return nil, err
   }
   defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
@@ -187,7 +196,7 @@ func ReadAllShareLock2(filePath string, data map[string][]byte, flag int, perm o
   builder := strings.Builder{}
   //Grow to a larger size to reduce future resizes of the buffer.
   builder.Grow(1024)
-  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil {  //Share reads.
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH); err != nil { //Share reads.
     return err
   }
   defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
@@ -211,7 +220,7 @@ func WriteAllExclusiveLock1(filePath string, data []byte, flag int, perm os.File
   //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
   //are executed in last-in-first-out order.
   defer file.Close()
-  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {  //Exclusive write.
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil { //Exclusive write.
     return -1, err
   }
   defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
@@ -231,7 +240,7 @@ func WriteAllExclusiveLock2(filePath string, data1 string, data2 []byte, flag in
   //Deferred function calls are pushed onto a stack. When a function returns, its deferred calls
   //are executed in last-in-first-out order.
   defer file.Close()
-  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil {  //Exclusive write.
+  if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX); err != nil { //Exclusive write.
     return -1, -1, err
   }
   defer syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
