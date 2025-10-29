@@ -39,6 +39,7 @@ $ go get -u "github.com/juan-carlos-trimino/go-os@v1.1.0"
 
 import (
   "bufio"
+  "fmt"
   "io"
   "os"
   "os/user"
@@ -278,4 +279,43 @@ func CheckDirExists(dirName string) (bool, error) {
     }
   }
   return info.IsDir(), nil
+}
+
+func ShowPermissions(path string, details bool) string {
+  sb := strings.Builder{}
+  //Grow to a larger size to reduce future resizes of the buffer.
+  sb.Grow(512)
+  fileInfo, err := os.Stat(path)
+  if err != nil {
+    //Check if the error indicates that the file/directory does not exist.
+    if os.IsNotExist(err) {
+      sb.WriteString(fmt.Sprintf("Does not exist: %s\n", path))
+    } else {
+      sb.WriteString(fmt.Sprintf("Error getting file info: %v\n", err))
+    }
+  } else {
+    //Get the file mode (permissions).
+    mode := fileInfo.Mode()
+    sb.WriteString(fmt.Sprintf("Is a directory: %t\n", mode.IsDir()))  //Check if it's a directory.
+    //Extract only the permission bits (octal representation).
+    permissions := mode.Perm()
+    //Show the file permissions in octal format.
+    sb.WriteString(fmt.Sprintf("Permissions for %s: %s (octal: %04o)\n", path,
+     mode.String(), permissions))
+    if details {
+      //Check for specific permissions using bitwise operations.
+      sb.WriteString(fmt.Sprintf("Is readable by USER: %t\n", permissions & 0400 != 0))
+      sb.WriteString(fmt.Sprintf("Is writable by USER: %t\n", permissions & 0200 != 0))
+      sb.WriteString(fmt.Sprintf("Is executable by USER: %t\n", permissions & 0100 != 0))
+      //
+      sb.WriteString(fmt.Sprintf("Is readable by GROUP: %t\n", permissions & 0040 != 0))
+      sb.WriteString(fmt.Sprintf("Is writable by GROUP: %t\n", permissions & 0020 != 0))
+      sb.WriteString(fmt.Sprintf("Is executable by GROUP: %t\n", permissions & 0010 != 0))
+      //
+      sb.WriteString(fmt.Sprintf("Is readable by OTHERS: %t\n", permissions & 0004 != 0))
+      sb.WriteString(fmt.Sprintf("Is writable by OTHERS: %t\n", permissions & 0002 != 0))
+      sb.WriteString(fmt.Sprintf("Is executable by  OTHERS: %t\n", permissions & 0001 != 0))
+    }
+  }
+  return sb.String()
 }
