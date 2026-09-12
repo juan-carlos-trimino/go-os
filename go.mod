@@ -11,4 +11,4 @@
 //The default name for the generated executable would be:
 module github.com/juan-carlos-trimino/go-os
 
-go 1.24.3
+go 1.26.4
