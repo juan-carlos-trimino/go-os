@@ -1,3 +1,12 @@
+//To fold all block comments:
+//  Ctrl+K and Ctrl+/
+//To unfold all block comments:
+//  Ctrl+K and Ctrl+J
+//
+//Build constraint: Only include this file in the build if the target OS is Linux and NOT Windows.
+//Note: There must be a blank line between the build constraints and the 'package' keyword.
+//go:build linux && !windows
+
 package osu
 
 import (
@@ -12,18 +21,18 @@ import (
   "syscall"
 )
 
-// Grouping together three related variables in a single package-level variable, protect.
+//Grouping together three related variables in a single package-level variable, protect.
 var shr = struct { //Unnamed struct.
   mutexDirs sync.Mutex  //Protect the file.
 }{}
 
-// Is the current user running as root?
+//Is the current user running as root?
 func IsRoot() (bool, error) {
   current, err := user.Current()
   if err != nil {
     return false, err
   }
-  return strings.EqualFold(current.Username, "root"), nil
+  return current.Uid == "0", nil
 }
 
 func GetUsername() (string, error) {
